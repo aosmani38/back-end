@@ -35,6 +35,7 @@ class ImageToWordModel(OnnxInferenceModel):
 # Define an endpoint for making predictions
 @app.route('/predict', methods=['POST'])
 def predict():
+    print("predicting.........")
     try:
          # Get the base64-encoded image data from the request
         image_data_base64 = request.json.get('image_data')
