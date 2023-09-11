@@ -45,7 +45,6 @@ def predict():
 
         # Decode the base64 image data to bytes
         image_data = base64.b64decode(image_data_base64)
-        print(image_data)
 
         if not image_data:
             return jsonify({'error': 'Failed to decode image data'})
@@ -55,6 +54,7 @@ def predict():
         
         # Convert the image data to a NumPy array
         image_np = np.frombuffer(image_data, dtype=np.uint8)
+        print(image_np)
         image_np = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
         # Perform inference
