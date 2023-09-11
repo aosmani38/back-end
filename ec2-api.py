@@ -61,6 +61,7 @@ def predict():
         response.headers["Access-Control-Allow-Origin"] = "*"  # Replace with your allowed origin(s)
         response.headers["Access-Control-Allow-Methods"] = "POST"
         response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
         response = make_response(jsonify({'prediction_text': prediction_text}), 200)
         
         return response
