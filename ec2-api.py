@@ -45,6 +45,7 @@ def predict():
 
         # Decode the base64 image data to bytes
         image_data = base64.b64decode(image_data_base64)
+        print(image_data)
 
         if not image_data:
             return jsonify({'error': 'Failed to decode image data'})
@@ -59,7 +60,7 @@ def predict():
         # Perform inference
         model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
         prediction_text = model.predict(image_np)
-        print("prediction------->")
+        print("prediction------->", end="")
         print(prediction_text)
 
         # Return the prediction result as json object
