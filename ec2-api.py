@@ -1,14 +1,20 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import Flask-CORS
+import tensorflow as tf
+import numpy as np
 import cv2
 import typing
-import numpy as np
-import os
-import requests
+import pandas as pd
+from tqdm import tqdm
 from mltu.configs import BaseModelConfigs
 from mltu.inferenceModel import OnnxInferenceModel
-from mltu.utils.text_utils import ctc_decoder, get_cer, get_wer
+from mltu.utils.text_utils import ctc_decoder
 from mltu.transformers import ImageResizer
-from flask import Flask, jsonify, request
+import requests
+import base64
 
+app = Flask(__name__)
+CORS(app, resources={r"/predict": {"origins": "http://localhost:3000"}})
 
 class ImageToWordModel(OnnxInferenceModel):
     def __init__(self, char_list: typing.Union[str, list], *args, **kwargs):
@@ -16,7 +22,9 @@ class ImageToWordModel(OnnxInferenceModel):
         self.char_list = char_list
 
     def predict(self, image: np.ndarray):
-        image = ImageResizer.resize_maintaining_aspect_ratio(image, *self.input_shape[:2][::-1])
+        image = ImageResizer.resize_maintaining_aspect_ratio(
+            image, *self.input_shape[:2][::-1]
+        )
 
         image_pred = np.expand_dims(image, axis=0).astype(np.float32)
 
@@ -27,63 +35,37 @@ class ImageToWordModel(OnnxInferenceModel):
         return text
 
 
-app = Flask(__name__)
-
-
-def inference(m, i):
-    predicted_text = m.predict(i)
-    return predicted_text
-
-
+# Define an endpoint for making predictions
 @app.route('/predict', methods=['POST'])
-def infer_image():
+def predict():
     try:
-        # Parse JSON data from the request
-        data = request.get_json()
+         # Get the base64-encoded image data from the request
+        image_data_base64 = request.json.get('image_data')
 
-        # Check if 'url' is in the JSON payload
-        if 'url' not in data:
-            return jsonify(error="Please provide the 'url' in the JSON payload")
+        if not image_data_base64:
+            return jsonify({'error': 'Image data is missing'})
 
-        image_url = data['url']
+        # Decode the base64 image data to bytes
+        image_data = base64.b64decode(image_data_base64)
 
-        # Fetch the image from the provided URL
-        response = requests.get(image_url)
-        response.raise_for_status()
-        image_data = response.content
+        if not image_data:
+            return jsonify({'error': 'Failed to decode image data'})
 
-        configs = BaseModelConfigs.load("./configs.yaml")
-
-        model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
-
-        name = ""
-
-        if response.status_code == 200:
-            # Specify the file name where you want to save the image
-            file_name = 'downloaded_image.jpg'
-            name = file_name
-
-            # Open the file in binary write mode and save the image data
-            with open(file_name, 'wb') as f:
-                f.write(image_data)
-
-        image = cv2.imread(name)
+        configs = BaseModelConfigs.load("../model/configs.yaml")
+        configs.model_path = "../model/model.onnx"
+        
+        # Convert the image data to a NumPy array
+        image_np = np.frombuffer(image_data, dtype=np.uint8)
+        image_np = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
         # Perform inference
-        prediction_text = model.predict(image)
-        print("Prediction: ", prediction_text)
+        model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
+        prediction_text = model.predict(image_np)
 
-        try:
-            os.remove(name)
-            print(f"{name} deleted.")
-        except OSError as e:
-            print(f"Error deleting {name}: {e}")
-
-        return jsonify(prediction=prediction_text)
-
+        # Return the prediction result as json object
+        return jsonify({'prediction_text': prediction_text})
     except Exception as e:
-        return jsonify(error=f"An error occurred: {str(e)}")
+        return jsonify({'error': str(e)})
 
-
-if __name__ == "__main__":
-    app.run(debug=False, host='0.0.0.0')
+if __name__ == '__main__':
+    app.run(debug=False)
