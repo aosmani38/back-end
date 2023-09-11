@@ -11,7 +11,7 @@ import requests
 import base64
 
 app = Flask(__name__)
-CORS(app, resources={r"/predict": {"origins": "*"}})
+# CORS(app, resources={r"/predict": {"origins": "*"}})
 
 class ImageToWordModel(OnnxInferenceModel):
     def __init__(self, char_list: typing.Union[str, list], *args, **kwargs):
@@ -49,8 +49,8 @@ def predict():
         if not image_data:
             return jsonify({'error': 'Failed to decode image data'})
 
-        # configs = BaseModelConfigs.load("./configs.yaml")
-        # configs.model_path = "./model.onnx"
+        configs = BaseModelConfigs.load("./configs.yaml")
+        configs.model_path = "./model.onnx"
         
         # Convert the image data to a NumPy array
         image_np = np.frombuffer(image_data, dtype=np.uint8)
