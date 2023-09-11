@@ -1,11 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Import Flask-CORS
-import tensorflow as tf
 import numpy as np
 import cv2
 import typing
-import pandas as pd
-from tqdm import tqdm
 from mltu.configs import BaseModelConfigs
 from mltu.inferenceModel import OnnxInferenceModel
 from mltu.utils.text_utils import ctc_decoder
@@ -14,7 +11,7 @@ import requests
 import base64
 
 app = Flask(__name__)
-CORS(app, resources={r"/predict": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/predict": {"origins": "*"}})
 
 class ImageToWordModel(OnnxInferenceModel):
     def __init__(self, char_list: typing.Union[str, list], *args, **kwargs):
@@ -51,8 +48,8 @@ def predict():
         if not image_data:
             return jsonify({'error': 'Failed to decode image data'})
 
-        configs = BaseModelConfigs.load("../model/configs.yaml")
-        configs.model_path = "../model/model.onnx"
+        configs = BaseModelConfigs.load("./configs.yaml")
+        configs.model_path = "./model.onnx"
         
         # Convert the image data to a NumPy array
         image_np = np.frombuffer(image_data, dtype=np.uint8)
