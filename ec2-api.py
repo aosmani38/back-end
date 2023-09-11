@@ -56,6 +56,7 @@ def predict():
         image_np = np.frombuffer(image_data, dtype=np.uint8)
         print(image_np)
         image_np = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+        print(image_np)
 
         # Perform inference
         model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
