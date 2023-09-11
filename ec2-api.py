@@ -48,8 +48,8 @@ def predict():
         if not image_data:
             return jsonify({'error': 'Failed to decode image data'})
 
-        configs = BaseModelConfigs.load("./configs.yaml")
-        configs.model_path = "./model.onnx"
+        # configs = BaseModelConfigs.load("./configs.yaml")
+        # configs.model_path = "./model.onnx"
         
         # Convert the image data to a NumPy array
         image_np = np.frombuffer(image_data, dtype=np.uint8)
@@ -58,10 +58,11 @@ def predict():
         # Perform inference
         model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
         prediction_text = model.predict(image_np)
-        print(prediction_text)
-        
+
+        # Return the prediction result as json object
         return jsonify({'prediction_text': prediction_text})
     except Exception as e:
+        return jsonify({'error': str(e)})
         return jsonify({'error': str(e)})
 
 if __name__ == "__main__":
