@@ -58,9 +58,12 @@ def predict():
         # Perform inference
         model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
         prediction_text = model.predict(image_np)
-
-        # Return the prediction result as json object
-        return jsonify({'prediction_text': prediction_text})
+        response.headers["Access-Control-Allow-Origin"] = "*"  # Replace with your allowed origin(s)
+        response.headers["Access-Control-Allow-Methods"] = "POST"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response = make_response(jsonify({'prediction_text': prediction_text}), 200)
+        
+        return response
     except Exception as e:
         return jsonify({'error': str(e)})
 
