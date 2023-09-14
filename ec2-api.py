@@ -35,7 +35,6 @@ class ImageToWordModel(OnnxInferenceModel):
 # Define an endpoint for making predictions
 @app.route('/predict', methods=['POST'])
 def predict():
-    print("predicting.........")
     try:
          # Get the base64-encoded image data from the request
         image_data_base64 = request.json.get('image_data')
@@ -59,8 +58,6 @@ def predict():
         # Perform inference
         model = ImageToWordModel(model_path=configs.model_path, char_list=configs.vocab)
         prediction_text = model.predict(image_np)
-        print("prediction-------> ", end="")
-        print(prediction_text)
 
         # Return the prediction result as json object
         return jsonify({'prediction_text': prediction_text})
